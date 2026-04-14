@@ -1,5 +1,5 @@
 /*
- * bartender.c
+ * bartender.c (her name is rebecca)
  */
 
 #include <pthread.h>
@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <semaphore.h>
 #include <fcntl.h>
+#include <time.h>
 #include "globals.h"
 #include "bartender.h"
 
@@ -30,6 +31,7 @@ void *bartender(void *args) {
  */
 void waitForCustomer() {
 	printf("\t\t\t\t\t\t\t\t\t\t\t| Bartender\n");
+	sem_post(bar_available);
 }
 
 /**
@@ -38,7 +40,14 @@ void waitForCustomer() {
  * TODO - SYNCHRONIZE ME
  */
 void makeDrink() {
+	sem_wait(cust_ordered);
+	sem_post(order_received);
 	printf("\t\t\t\t\t\t\t\t\t\t\t| \t\tBartender\n");
+	srand(time(NULL));
+	int r = rand();
+	int time = r % (1000 - 5) + 6;
+	usleep(time * 1000);
+	sem_post(drink_finished);
 }
 
 /**
@@ -49,6 +58,11 @@ void receivePayment() {
 	// at the register waiting for customer to pay
 	printf("\t\t\t\t\t\t\t\t\t\t\t| \t\t\t\tBartender\n");
 
+	sem_wait(cust_at_reg);
+	sem_wait(cust_paid);
+
 	// got paid by the customer!
 	printf("\t\t\t\t\t\t\t\t\t\t\t| \t\t\t\t\t\tBartender\n");
+	sem_post(pay_received);
+	sem_wait(cust_left);
 }

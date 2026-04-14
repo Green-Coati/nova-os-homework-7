@@ -7,7 +7,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <semaphore.h>
+#include <unistd.h>
 #include <fcntl.h>
+#include <time.h>
 #include "globals.h"
 #include "customer.h"
 
@@ -32,6 +34,10 @@ void *customer(void *args) {
  */
 void custTravelToBar(unsigned int custID) {
 	printf("Cust %u\t\t\t\t\t\t\t\t\t\t\t|\n", custID);
+	srand(time(NULL));
+	int r = rand();
+	int time = r % (5000 - 20) + 21;
+	usleep(time * 1000);
 }
 
 /**
@@ -40,6 +46,7 @@ void custTravelToBar(unsigned int custID) {
  * TODO - SYNCHRONIZE ME
  */
 void custArriveAtBar(unsigned int custID) {
+	sem_wait(bar_available);
 	printf("\t\tCust %u\t\t\t\t\t\t\t\t\t|\n", custID);
 }
 
@@ -49,6 +56,8 @@ void custArriveAtBar(unsigned int custID) {
  */
 void custPlaceOrder(unsigned int custID) {
 	printf("\t\t\t\tCust %u\t\t\t\t\t\t\t|\n", custID);
+	sem_post(cust_ordered);
+	sem_wait(order_received);
 }
 
 /**
@@ -57,6 +66,9 @@ void custPlaceOrder(unsigned int custID) {
  */
 void custBrowseArt(unsigned int custID) {
 	printf("\t\t\t\t\t\tCust %u\t\t\t\t\t|\n", custID);
+	int r = rand();
+	int time = r % (4000 - 3) + 4;
+	usleep(time * 1000);
 }
 
 /**
@@ -65,12 +77,17 @@ void custBrowseArt(unsigned int custID) {
  * TODO - SYNCHRONIZE ME
  */
 void custAtRegister(unsigned int custID) {
+	sem_post(cust_at_reg);
 	printf("\t\t\t\t\t\t\t\tCust %u\t\t\t|\n", custID);
+	sem_wait(drink_finished);
+	sem_post(cust_paid);
 }
 
 /**
  * The customer in the bar leaves the bar.
  */
 void custLeaveBar(unsigned int custID) {
+	sem_wait(pay_received);
 	printf("\t\t\t\t\t\t\t\t\t\tCust %u\t|\n", custID);
+	sem_post(cust_left);
 }
